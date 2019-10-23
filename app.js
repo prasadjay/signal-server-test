@@ -99,7 +99,10 @@ let distribute = async (data) => {
             case 'offer':
                 outResp = await InitCall(data.caller_session_id, data.caller_handle_id, data.callee_username, data.sdp);
                 break;
-            case 'answer':
+            case 'accept':
+                outResp = await AcceptCall(data.caller_session_id, data.caller_handle_id, data.sdp);
+                break;
+            case 'destroy':
                 outResp = await Destroy(data.session_id);
                 break;
             default:
@@ -165,6 +168,30 @@ let InitCall = async (caller_session_id, caller_handle_id, callee_username, sdp)
     return outResp;
 };
 
+let AcceptCall = async (callee_session_id, callee_handle_id, sdp) => {
+    let outResp = {
+        status: true,
+        message: "SUCCESS",
+        type: "answer"
+    };
+
+    try {
+        //create offer
+        let offer_create_resp = await janusLib.CreateAnswer(callee_session_id, callee_handle_id, sdp);
+        // global.call_map[caller_session_id] = global.name_map[callee_username];
+        // global.call_recieve_map[global.name_map[callee_username]] = caller_session_id;
+        // global.caller = caller_session_id;
+
+
+        outResp.message = "CALL_ACCEPTED";
+        outResp.data = offer_create_resp;
+    } catch (e) {
+        console.log("ERROR_ACCEPT", e);
+    }
+
+    return outResp;
+};
+
 let Destroy = async (session_id) => {
     let outResp = {
         status: true,
@@ -189,11 +216,13 @@ let ProcessEvent = (event) => {
     let outResp = {};
     let connection = null;
 
-    if (event.event.plugin && event.event.data && event.event.data.event && event.event.data.event === "calling") {
+    if (event.event.jsep && event.event.jsep.type === "offer" && event.event.owner && event.event.owner === "local") {
         console.log("incoming call alert to callee.. inform callee");
-        connection = global[call_map[event.session_id]];
-        outResp.type = "incoming-call";
-        outResp.from = global.name_map[event.session_id];
+        //connection = global[global.call_map[event.session_id]];
+        connection = global[event.session_id];
+        outResp.type = "incoming_call";
+        outResp.caller_sdp = event.event.jsep.sdp;
+        outResp.from = "huehuehue";
     } else if (event.event.jsep && event.event.jsep.type === "answer" && event.event.owner && event.event.owner === "local") {
         console.log("call answered by callee.. inform caller");
         //let caller_session = global.call_recieve_map[event.session_id];

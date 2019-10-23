@@ -131,10 +131,6 @@ module.exports.CreateOffer = async (session_id, handle_id, recipient, caller_sdp
     });
 };
 
-module.exports.CreateAnswer = async (session_id, handle_id, sdp) => {
-
-};
-
 module.exports.DestroySession = async (session_id) => {
     return new Promise(function (resolve, reject) {
         request({
@@ -148,6 +144,41 @@ module.exports.DestroySession = async (session_id) => {
         }, function (error, response, body) {
             if (!error && response.statusCode === 200) {
                 console.log("DESTROY_SESSION_RESP", JSON.stringify(body));
+                resolve(body);
+            } else {
+                reject(error);
+            }
+        });
+    });
+};
+
+module.exports.CreateAnswer = async (session_id, handle_id, callee_sdp) => {
+    //{"janus":"message","body":{"request":"call","username":"vv"},"transaction":"XIndw5DZk9HR","jsep":{"type":"offer","sdp":""}}
+    let json_object = {
+        "janus": "message",
+        "body": {
+            "request": "accept"
+        },
+        "transaction": "XIndw5DZk9HR",
+        "jsep": {
+            "type": "answer",
+            //  "trickle": false,
+            "sdp": callee_sdp
+        }
+    };
+
+    console.log("DO_ANSWER_REQ", JSON.stringify(json_object));
+    console.log("DO_ANSWER_URL", `http://localhost:8088/janus/` + session_id + "/" + handle_id);
+
+    return new Promise(function (resolve, reject) {
+        request({
+            url: `http://localhost:8088/janus/` + session_id + "/" + handle_id,
+            headers: {},
+            method: 'POST',
+            json: json_object
+        }, function (error, response, body) {
+            if (!error && response.statusCode === 200) {
+                console.log("DO_ANSWER", JSON.stringify(body));
                 resolve(body);
             } else {
                 reject(error);
