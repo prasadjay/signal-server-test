@@ -20,7 +20,7 @@ var options = {
     key: fs.readFileSync('./private-key.pem'),
     cert: fs.readFileSync('./certificate.crt')
 };
-var server = http.createServer(options,function (request, response) {
+var server = http.createServer(options, function (request, response) {
     console.log((new Date()) + ' Received request for ' + request.url);
     //response.writeHead(404);
     response.end();
@@ -186,6 +186,8 @@ let AcceptCall = async (callee_session_id, callee_handle_id, sdp) => {
     try {
         //create offer
         let offer_create_resp = await janusLib.CreateAnswer(callee_session_id, callee_handle_id, sdp);
+        //let aaa = await janusLib.DisableAudio(callee_session_id, callee_handle_id);
+        //let aaa1 = await janusLib.DisableAudio(global.name_arr.bb.session_id, global.name_arr.bb.handler_id);
         let bb = await janusLib.SetRecording(callee_session_id, callee_handle_id, "callee");
         let cc = await janusLib.SetRecording(global.name_arr.bb.session_id, global.name_arr.bb.handler_id, "caller");
         // global.call_map[caller_session_id] = global.name_map[callee_username];

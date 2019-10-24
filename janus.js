@@ -279,3 +279,35 @@ module.exports.SetRecording = async (session_id, handle_id, type) => {
         });
     });
 };
+
+module.exports.DisableAudio = async (session_id, handle_id) => {
+    //{"janus":"message","body":{"request":"call","username":"vv"},"transaction":"XIndw5DZk9HR","jsep":{"type":"offer","sdp":""}}
+    let json_object = {
+        "janus": "message",
+        "body": {
+            "request": "set",
+            "audio": false,
+            //  "video": true,
+        },
+        "transaction": "XIndw5DZk9HR"
+    };
+
+    console.log("DO_DISABLE_AUDIO_REQ", JSON.stringify(json_object));
+    console.log("DO_DISABLE_AUDIO_URL", `http://localhost:8088/janus/` + session_id + "/" + handle_id);
+
+    return new Promise(function (resolve, reject) {
+        request({
+            url: `http://localhost:8088/janus/` + session_id + "/" + handle_id,
+            headers: {},
+            method: 'POST',
+            json: json_object
+        }, function (error, response, body) {
+            if (!error && response.statusCode === 200) {
+                console.log("DO_DISABLE_AUDIO", JSON.stringify(body));
+                resolve(body);
+            } else {
+                reject(error);
+            }
+        });
+    });
+};
