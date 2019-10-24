@@ -1,12 +1,12 @@
 const request = require('request');
 const Promise = require("bluebird");
 
-const host = "192.168.1.5";
+const host = "localhost";
 
 module.exports.CreateSession = async () => {
     return new Promise(function (resolve, reject) {
         request({
-            url: `http://localhost:8088/janus/`,
+            url: `http://`+host+`:8088/janus/`,
             headers: {},
             method: 'POST',
             json: {
@@ -27,7 +27,7 @@ module.exports.CreateSession = async () => {
 module.exports.AttachPlugin = async (session_id, plugin_name) => {
     return new Promise(function (resolve, reject) {
         request({
-            url: `http://localhost:8088/janus/` + session_id,
+            url: `http://`+host+`:8088/janus/` + session_id,
             headers: {},
             method: 'POST',
             json: {
