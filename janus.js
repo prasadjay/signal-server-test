@@ -1,6 +1,8 @@
 const request = require('request');
 const Promise = require("bluebird");
 
+const host = "192.168.1.5";
+
 module.exports.CreateSession = async () => {
     return new Promise(function (resolve, reject) {
         request({
@@ -49,7 +51,7 @@ module.exports.RegisterUser = async (session_id, handle_id, username) => {
     //{"janus":"message","body":{"request":"register","username":"qq"},"transaction":"Fi7nRgeSW7Jx"}
     return new Promise(function (resolve, reject) {
         request({
-            url: `http://localhost:8088/janus/` + session_id + "/" + handle_id,
+            url: `http://` + host + `:8088/janus/` + session_id + "/" + handle_id,
             headers: {},
             method: 'POST',
             json: {
@@ -75,7 +77,7 @@ module.exports.GetUserList = async (session_id, handle_id) => {
 //{"janus":"message","body":{"request":"list"},"transaction":"4ne5cSCgQWzh"}
     return new Promise(function (resolve, reject) {
         request({
-            url: `http://localhost:8088/janus/` + session_id + "/" + handle_id,
+            url: `http://` + host + `:8088/janus/` + session_id + "/" + handle_id,
             headers: {},
             method: 'POST',
             json: {
@@ -116,7 +118,7 @@ module.exports.CreateOffer = async (session_id, handle_id, recipient, caller_sdp
 
     return new Promise(function (resolve, reject) {
         request({
-            url: `http://localhost:8088/janus/` + session_id + "/" + handle_id,
+            url: `http://` + host + `:8088/janus/` + session_id + "/" + handle_id,
             headers: {},
             method: 'POST',
             json: json_object
@@ -134,7 +136,7 @@ module.exports.CreateOffer = async (session_id, handle_id, recipient, caller_sdp
 module.exports.DestroySession = async (session_id) => {
     return new Promise(function (resolve, reject) {
         request({
-            url: `http://localhost:8088/janus/` + session_id,
+            url: `http://` + host + `:8088/janus/` + session_id,
             headers: {},
             method: 'POST',
             json: {
@@ -168,11 +170,11 @@ module.exports.CreateAnswer = async (session_id, handle_id, callee_sdp) => {
     };
 
     console.log("DO_ANSWER_REQ", JSON.stringify(json_object));
-    console.log("DO_ANSWER_URL", `http://localhost:8088/janus/` + session_id + "/" + handle_id);
+    console.log("DO_ANSWER_URL", `http://` + host + `:8088/janus/` + session_id + "/" + handle_id);
 
     return new Promise(function (resolve, reject) {
         request({
-            url: `http://localhost:8088/janus/` + session_id + "/" + handle_id,
+            url: `http://` + host + `:8088/janus/` + session_id + "/" + handle_id,
             headers: {},
             method: 'POST',
             json: json_object
@@ -196,11 +198,11 @@ module.exports.CreateTrickle = async (session_id, handle_id, candidate) => {
     };
 
     console.log("DO_TRICKLE_REQ", JSON.stringify(json_object));
-    console.log("DO_TRICKLE_URL", `http://localhost:8088/janus/` + session_id + "/" + handle_id);
+    console.log("DO_TRICKLE_URL", `http://` + host + `:8088/janus/` + session_id + "/" + handle_id);
 
     return new Promise(function (resolve, reject) {
         request({
-            url: `http://localhost:8088/janus/` + session_id + "/" + handle_id,
+            url: `http://` + host + `:8088/janus/` + session_id + "/" + handle_id,
             headers: {},
             method: 'POST',
             json: json_object
@@ -226,11 +228,11 @@ module.exports.EndTrickle = async (session_id, handle_id, candidate) => {
     };
 
     console.log("DO_TRICKLE_END_REQ", JSON.stringify(json_object));
-    console.log("DO_TRICKLE_END_URL", `http://localhost:8088/janus/` + session_id + "/" + handle_id);
+    console.log("DO_TRICKLE_END_URL", `http://` + host + `:8088/janus/` + session_id + "/" + handle_id);
 
     return new Promise(function (resolve, reject) {
         request({
-            url: `http://localhost:8088/janus/` + session_id + "/" + handle_id,
+            url: `http://` + host + `:8088/janus/` + session_id + "/" + handle_id,
             headers: {},
             method: 'POST',
             json: json_object
@@ -261,11 +263,11 @@ module.exports.SetRecording = async (session_id, handle_id, type) => {
     };
 
     console.log("DO_SET_REQ", JSON.stringify(json_object));
-    console.log("DO_SET_URL", `http://localhost:8088/janus/` + session_id + "/" + handle_id);
+    console.log("DO_SET_URL", `http://` + host + `:8088/janus/` + session_id + "/" + handle_id);
 
     return new Promise(function (resolve, reject) {
         request({
-            url: `http://localhost:8088/janus/` + session_id + "/" + handle_id,
+            url: `http://` + host + `:8088/janus/` + session_id + "/" + handle_id,
             headers: {},
             method: 'POST',
             json: json_object
@@ -293,11 +295,11 @@ module.exports.DisableAudio = async (session_id, handle_id) => {
     };
 
     console.log("DO_DISABLE_AUDIO_REQ", JSON.stringify(json_object));
-    console.log("DO_DISABLE_AUDIO_URL", `http://localhost:8088/janus/` + session_id + "/" + handle_id);
+    console.log("DO_DISABLE_AUDIO_URL", `http://` + host + `:8088/janus/` + session_id + "/" + handle_id);
 
     return new Promise(function (resolve, reject) {
         request({
-            url: `http://localhost:8088/janus/` + session_id + "/" + handle_id,
+            url: `http://` + host + `:8088/janus/` + session_id + "/" + handle_id,
             headers: {},
             method: 'POST',
             json: json_object
