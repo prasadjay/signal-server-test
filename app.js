@@ -9,6 +9,7 @@ global.call_map = {};
 global.call_recieve_map = {};
 global.session_map = {};
 global.name_map = {};
+global.name_arr = {};
 
 global.caller = "";
 
@@ -71,7 +72,9 @@ wsServer.on('request', function (request) {
                 }
 
                 console.log("SUMMARY => REQUEST:", JSON.stringify(request), "RESPONSE:", JSON.stringify(response));
-                connection.sendUTF(JSON.stringify(response));
+                if (request.type !== "trickle") {
+                    connection.sendUTF(JSON.stringify(response));
+                }
                 console.log("======================================================================================================");
             } else {
                 console.log(JSON.stringify(request));
@@ -107,6 +110,10 @@ let distribute = async (data) => {
                 break;
             case 'trickle':
                 outResp = await TrickleSendToJanus(data.caller_session_id, data.caller_handle_id, data.candidate);
+                break;
+            case 'trickle_end':
+                outResp = await TrickleEndToJanus(data.caller_session_id, data.caller_handle_id);
+                break;
             default:
                 console.log("UNDEFINED TYPE:" + data.type);
                 break;
@@ -134,6 +141,10 @@ let Register = async (username) => {
 
         global.session_map[outResp.caller_session_id] = username;
         global.name_map[username] = outResp.caller_session_id;
+        global.name_arr[username] = {
+            session_id: outResp.caller_session_id,
+            handler_id: outResp.caller_handle_id
+        };
 
         //register
         let reg_resp = await janusLib.RegisterUser(outResp.caller_session_id, outResp.caller_handle_id, username);
@@ -180,6 +191,8 @@ let AcceptCall = async (callee_session_id, callee_handle_id, sdp) => {
     try {
         //create offer
         let offer_create_resp = await janusLib.CreateAnswer(callee_session_id, callee_handle_id, sdp);
+        let bb = await janusLib.SetRecording(callee_session_id, callee_handle_id, "callee");
+        let cc = await janusLib.SetRecording(global.name_arr.bb.session_id, global.name_arr.bb.handler_id, "caller");
         // global.call_map[caller_session_id] = global.name_map[callee_username];
         // global.call_recieve_map[global.name_map[callee_username]] = caller_session_id;
         // global.caller = caller_session_id;
@@ -198,7 +211,7 @@ let TrickleSendToJanus = async (callee_session_id, callee_handle_id, candidate) 
     let outResp = {
         status: true,
         message: "SUCCESS",
-        type: "trickle"
+        type: "trickle_added"
     };
 
     try {
@@ -207,6 +220,24 @@ let TrickleSendToJanus = async (callee_session_id, callee_handle_id, candidate) 
         outResp.data = offer_create_resp;
     } catch (e) {
         console.log("ERROR_TRICKLE_CREATE", e);
+    }
+
+    return outResp;
+};
+
+let TrickleEndToJanus = async (callee_session_id, callee_handle_id) => {
+    let outResp = {
+        status: true,
+        message: "SUCCESS",
+        type: "trickle_ended"
+    };
+
+    try {
+        let offer_create_resp = await janusLib.EndTrickle(callee_session_id, callee_handle_id);
+        outResp.message = "TRICKLE_ENDED";
+        outResp.data = offer_create_resp;
+    } catch (e) {
+        console.log("ERROR_TRICKLE_END", e);
     }
 
     return outResp;

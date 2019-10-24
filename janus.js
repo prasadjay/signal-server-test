@@ -107,7 +107,7 @@ module.exports.CreateOffer = async (session_id, handle_id, recipient, caller_sdp
         "transaction": "XIndw5DZk9HR",
         "jsep": {
             "type": "offer",
-            "trickle": false,
+            //"trickle": false,
             "sdp": caller_sdp
         }
     };
@@ -207,6 +207,71 @@ module.exports.CreateTrickle = async (session_id, handle_id, candidate) => {
         }, function (error, response, body) {
             if (!error && response.statusCode === 200) {
                 console.log("DO_TRICKLE", JSON.stringify(body));
+                resolve(body);
+            } else {
+                reject(error);
+            }
+        });
+    });
+};
+
+module.exports.EndTrickle = async (session_id, handle_id, candidate) => {
+    //{"janus":"message","body":{"request":"call","username":"vv"},"transaction":"XIndw5DZk9HR","jsep":{"type":"offer","sdp":""}}
+    let json_object = {
+        "janus": "trickle",
+        "transaction": "hehe83hd8dw12e",
+        "candidate": {
+            "completed": true
+        }
+    };
+
+    console.log("DO_TRICKLE_END_REQ", JSON.stringify(json_object));
+    console.log("DO_TRICKLE_END_URL", `http://localhost:8088/janus/` + session_id + "/" + handle_id);
+
+    return new Promise(function (resolve, reject) {
+        request({
+            url: `http://localhost:8088/janus/` + session_id + "/" + handle_id,
+            headers: {},
+            method: 'POST',
+            json: json_object
+        }, function (error, response, body) {
+            if (!error && response.statusCode === 200) {
+                console.log("DO_TRICKLE_END", JSON.stringify(body));
+                resolve(body);
+            } else {
+                reject(error);
+            }
+        });
+    });
+};
+
+module.exports.SetRecording = async (session_id, handle_id, type) => {
+    //{"janus":"message","body":{"request":"call","username":"vv"},"transaction":"XIndw5DZk9HR","jsep":{"type":"offer","sdp":""}}
+    let json_object = {
+        "janus": "message",
+        "body": {
+            "request": "set",
+            //   "audio": true,
+            //  "video": true,
+            // "bitrate": 1024000,
+            "record": true,
+            "filename": "/home/jay/recordings_raw/" + session_id + "-" + type
+        },
+        "transaction": "XIndw5DZk9HR"
+    };
+
+    console.log("DO_SET_REQ", JSON.stringify(json_object));
+    console.log("DO_SET_URL", `http://localhost:8088/janus/` + session_id + "/" + handle_id);
+
+    return new Promise(function (resolve, reject) {
+        request({
+            url: `http://localhost:8088/janus/` + session_id + "/" + handle_id,
+            headers: {},
+            method: 'POST',
+            json: json_object
+        }, function (error, response, body) {
+            if (!error && response.statusCode === 200) {
+                console.log("DO_SET", JSON.stringify(body));
                 resolve(body);
             } else {
                 reject(error);
