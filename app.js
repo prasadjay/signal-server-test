@@ -105,6 +105,8 @@ let distribute = async (data) => {
             case 'destroy':
                 outResp = await Destroy(data.session_id);
                 break;
+            case 'trickle':
+                outResp = await TrickleSendToJanus(data.caller_session_id, data.caller_handle_id, data.candidate);
             default:
                 console.log("UNDEFINED TYPE:" + data.type);
                 break;
@@ -187,6 +189,24 @@ let AcceptCall = async (callee_session_id, callee_handle_id, sdp) => {
         outResp.data = offer_create_resp;
     } catch (e) {
         console.log("ERROR_ACCEPT", e);
+    }
+
+    return outResp;
+};
+
+let TrickleSendToJanus = async (callee_session_id, callee_handle_id, candidate) => {
+    let outResp = {
+        status: true,
+        message: "SUCCESS",
+        type: "trickle"
+    };
+
+    try {
+        let offer_create_resp = await janusLib.CreateTrickle(callee_session_id, callee_handle_id, candidate);
+        outResp.message = "TRICKLE_CREATED";
+        outResp.data = offer_create_resp;
+    } catch (e) {
+        console.log("ERROR_TRICKLE_CREATE", e);
     }
 
     return outResp;

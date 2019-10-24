@@ -186,3 +186,31 @@ module.exports.CreateAnswer = async (session_id, handle_id, callee_sdp) => {
         });
     });
 };
+
+module.exports.CreateTrickle = async (session_id, handle_id, candidate) => {
+    //{"janus":"message","body":{"request":"call","username":"vv"},"transaction":"XIndw5DZk9HR","jsep":{"type":"offer","sdp":""}}
+    let json_object = {
+        "janus": "trickle",
+        "transaction": "hehe83hd8dw12e",
+        "candidate": candidate
+    };
+
+    console.log("DO_TRICKLE_REQ", JSON.stringify(json_object));
+    console.log("DO_TRICKLE_URL", `http://localhost:8088/janus/` + session_id + "/" + handle_id);
+
+    return new Promise(function (resolve, reject) {
+        request({
+            url: `http://localhost:8088/janus/` + session_id + "/" + handle_id,
+            headers: {},
+            method: 'POST',
+            json: json_object
+        }, function (error, response, body) {
+            if (!error && response.statusCode === 200) {
+                console.log("DO_TRICKLE", JSON.stringify(body));
+                resolve(body);
+            } else {
+                reject(error);
+            }
+        });
+    });
+};
