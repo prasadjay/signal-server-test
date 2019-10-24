@@ -11,14 +11,30 @@ const expressServer = require('./express');
 
 //---------------------- WEBSOCKET SERVER ------------------------------
 var WebSocketServer = require('websocket').server;
-var http = require('http');
 var janusLib = require('./janus');
 
-var server = http.createServer(function (request, response) {
+//----------------- HTTPS-------------------
+var http = require('https');
+const fs = require('fs');
+var options = {
+    key: fs.readFileSync('./private-key.pem'),
+    cert: fs.readFileSync('./certificate.crt')
+};
+var server = http.createServer(options,function (request, response) {
     console.log((new Date()) + ' Received request for ' + request.url);
-    response.writeHead(404);
+    //response.writeHead(404);
     response.end();
 });
+
+//----------------- HTTP-------------------
+// var http = require('http');
+// var server = http.createServer(function (request, response) {
+//     console.log((new Date()) + ' Received request for ' + request.url);
+//     //response.writeHead(404);
+//     response.end();
+// });
+
+
 server.listen(4000, function () {
     console.log((new Date()) + ' Server is listening on port 4000');
 });
@@ -69,13 +85,6 @@ wsServer.on('request', function (request) {
         console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
     });
 });
-
-
-
-
-
-
-
 
 
 let distribute = async (data) => {
