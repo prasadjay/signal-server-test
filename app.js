@@ -4,6 +4,15 @@ global.session_map = {};
 global.name_map = {};
 global.name_arr = {};
 global.caller = "";
+global.callee_session_id = "";
+global.callee_handle_id = "";
+
+
+global.sessionToName = {};
+global.nameToSession = {};
+global.sessionToHandle = {};
+global.callerToCallee = {};
+global.calleeToCaller = {};
 
 //-------------- HTTP SERVER-------------
 const expressServer = require('./express');
@@ -14,25 +23,25 @@ var WebSocketServer = require('websocket').server;
 var janusLib = require('./janus');
 
 //----------------- HTTPS-------------------
-var http = require('https');
-const fs = require('fs');
-var options = {
-    key: fs.readFileSync('./private-key.pem'),
-    cert: fs.readFileSync('./certificate.crt')
-};
-var server = http.createServer(options, function (request, response) {
-    console.log((new Date()) + ' Received request for ' + request.url);
-    //response.writeHead(404);
-    response.end();
-});
-
-//----------------- HTTP-------------------
-// var http = require('http');
-// var server = http.createServer(function (request, response) {
+// var http = require('https');
+// const fs = require('fs');
+// var options = {
+//     key: fs.readFileSync('./private-key.pem'),
+//     cert: fs.readFileSync('./certificate.crt')
+// };
+// var server = http.createServer(options, function (request, response) {
 //     console.log((new Date()) + ' Received request for ' + request.url);
 //     //response.writeHead(404);
 //     response.end();
 // });
+
+//----------------- HTTP-------------------
+var http = require('http');
+var server = http.createServer(function (request, response) {
+    console.log((new Date()) + ' Received request for ' + request.url);
+    //response.writeHead(404);
+    response.end();
+});
 
 
 server.listen(4000, function () {
@@ -109,6 +118,10 @@ let distribute = async (data) => {
             case 'trickle_end':
                 outResp = await TrickleEndToJanus(data.caller_session_id, data.caller_handle_id);
                 break;
+            case 'offer_update':
+                outResp = await ReOffer(data.caller_session_id, data.caller_handle_id, data.callee_username, data.sdp);
+                //outResp = await ReOffer(global.callee_session_id, global.callee_handle_id, "aa", "sdb");
+                break;
             default:
                 console.log("UNDEFINED TYPE:" + data.type);
                 break;
@@ -134,6 +147,18 @@ let Register = async (username) => {
         outResp.caller_session_id = attach_resp.session_id;
         outResp.caller_handle_id = attach_resp.data.id;
 
+        //new
+        if (global.nameToSession[username] && global.nameToSession[username] !== "") {
+            outResp.status = false;
+            outResp.message = "Already existing session";
+            return outResp;
+        }
+
+        global.sessionToName[outResp.caller_session_id] = username;
+        global.nameToSession[username] = outResp.caller_session_id;
+        global.sessionToHandle[outResp.caller_session_id] = outResp.caller_handle_id;
+
+        //old
         global.session_map[outResp.caller_session_id] = username;
         global.name_map[username] = outResp.caller_session_id;
         global.name_arr[username] = {
@@ -166,6 +191,9 @@ let InitCall = async (caller_session_id, caller_handle_id, callee_username, sdp)
         global.call_recieve_map[global.name_map[callee_username]] = caller_session_id;
         global.caller = caller_session_id;
 
+        //new
+        global.callerToCallee[caller_session_id] = global.nameToSession[callee_username];
+        global.calleeToCaller[global.nameToSession[callee_username]] = caller_session_id;
 
         outResp.message = "CALL_REQUEST_ACCEPTED";
         outResp.data = offer_create_resp;
@@ -186,14 +214,17 @@ let AcceptCall = async (callee_session_id, callee_handle_id, sdp) => {
     try {
         //create offer
         let offer_create_resp = await janusLib.CreateAnswer(callee_session_id, callee_handle_id, sdp);
+
         //let aaa = await janusLib.DisableAudio(callee_session_id, callee_handle_id);
         //let aaa1 = await janusLib.DisableAudio(global.name_arr.bb.session_id, global.name_arr.bb.handler_id);
-        let bb = await janusLib.SetRecording(callee_session_id, callee_handle_id, "callee");
-        let cc = await janusLib.SetRecording(global.name_arr.bb.session_id, global.name_arr.bb.handler_id, "caller");
+        //let bb = await janusLib.SetRecording(callee_session_id, callee_handle_id, "callee");
+        //let cc = await janusLib.SetRecording(global.name_arr.bb.session_id, global.name_arr.bb.handler_id, "caller");
         // global.call_map[caller_session_id] = global.name_map[callee_username];
         // global.call_recieve_map[global.name_map[callee_username]] = caller_session_id;
         // global.caller = caller_session_id;
 
+        global.callee_session_id = callee_session_id;
+        global.callee_handle_id = callee_handle_id;
 
         outResp.message = "CALL_ACCEPTED";
         outResp.data = offer_create_resp;
@@ -255,5 +286,34 @@ let Destroy = async (session_id) => {
         outResp.status = false;
         outResp.message = e.toString();
     }
+    return outResp;
+};
+
+let ReOffer = async (caller_session_id, caller_handle_id, callee_username, sdp) => {
+    let outResp = {
+        status: true,
+        message: "SUCCESS",
+        type: "offer_update"
+    };
+
+    try {
+        //create offer
+        let offer_create_resp_pre = await janusLib.ReOfferPre(global.callee_session_id, global.callee_handle_id, callee_username, sdp);
+        let offer_create_resp = await janusLib.ReOffer(global.callee_session_id, global.callee_handle_id, callee_username, sdp);
+
+        global.call_map[caller_session_id] = global.name_map[callee_username];
+        global.call_recieve_map[global.name_map[callee_username]] = caller_session_id;
+        global.caller = caller_session_id;
+
+        //new
+        global.callerToCallee[caller_session_id] = global.nameToSession[callee_username];
+        global.calleeToCaller[global.nameToSession[callee_username]] = caller_session_id;
+
+        outResp.message = "CALL_RE_REQUEST_ACCEPTED";
+        outResp.data = offer_create_resp;
+    } catch (e) {
+        console.log("ERROR_RE_OFFER", e);
+    }
+
     return outResp;
 };

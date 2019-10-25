@@ -6,7 +6,7 @@ const host = "localhost";
 module.exports.CreateSession = async () => {
     return new Promise(function (resolve, reject) {
         request({
-            url: `http://`+host+`:8088/janus/`,
+            url: `http://` + host + `:8088/janus/`,
             headers: {},
             method: 'POST',
             json: {
@@ -27,7 +27,7 @@ module.exports.CreateSession = async () => {
 module.exports.AttachPlugin = async (session_id, plugin_name) => {
     return new Promise(function (resolve, reject) {
         request({
-            url: `http://`+host+`:8088/janus/` + session_id,
+            url: `http://` + host + `:8088/janus/` + session_id,
             headers: {},
             method: 'POST',
             json: {
@@ -306,6 +306,111 @@ module.exports.DisableAudio = async (session_id, handle_id) => {
         }, function (error, response, body) {
             if (!error && response.statusCode === 200) {
                 console.log("DO_DISABLE_AUDIO", JSON.stringify(body));
+                resolve(body);
+            } else {
+                reject(error);
+            }
+        });
+    });
+};
+
+module.exports.ReOffer = async (session_id, handle_id, recipient, sdp) => {
+    //{"janus":"message","body":{"request":"call","username":"vv"},"transaction":"XIndw5DZk9HR","jsep":{"type":"offer","sdp":""}}
+    let json_object = {
+        "janus": "message",
+        "body": {
+            "request": "set",
+            //"username": recipient
+        },
+        "jsep": {
+            "type": "offer",
+            "sdp": sdp
+        },
+        "transaction": "XIndw5DZk9HR"
+    };
+
+    console.log("DO_RE_OFFER_REQ", JSON.stringify(json_object));
+    console.log("DO_RE_OFFER_URL", `http://` + host + `:8088/janus/` + session_id + "/" + handle_id);
+
+    return new Promise(function (resolve, reject) {
+        request({
+            url: `http://` + host + `:8088/janus/` + session_id + "/" + handle_id,
+            headers: {},
+            method: 'POST',
+            json: json_object
+        }, function (error, response, body) {
+            if (!error && response.statusCode === 200) {
+                console.log("DO_RE_OFFER", JSON.stringify(body));
+                resolve(body);
+            } else {
+                reject(error);
+            }
+        });
+    });
+};
+
+module.exports.ReOfferPre = async (session_id, handle_id, recipient, sdp) => {
+    //{"janus":"message","body":{"request":"call","username":"vv"},"transaction":"XIndw5DZk9HR","jsep":{"type":"offer","sdp":""}}
+    let json_object = {
+        "janus": "message",
+        "body": {
+            "request": "set",
+            "audio": false,
+            "video": false
+        },
+        // "jsep": {
+        //     "type": "offer",
+        //     "sdp": sdp
+        // },
+        "transaction": "XIndw5DZk9HR"
+    };
+
+    console.log("DO_RE_OFFER_PRE_REQ", JSON.stringify(json_object));
+    console.log("DO_RE_OFFER__PRE_URL", `http://` + host + `:8088/janus/` + session_id + "/" + handle_id);
+
+    return new Promise(function (resolve, reject) {
+        request({
+            url: `http://` + host + `:8088/janus/` + session_id + "/" + handle_id,
+            headers: {},
+            method: 'POST',
+            json: json_object
+        }, function (error, response, body) {
+            if (!error && response.statusCode === 200) {
+                console.log("DO_RE_OFFER_PRE", JSON.stringify(body));
+                resolve(body);
+            } else {
+                reject(error);
+            }
+        });
+    });
+};
+
+module.exports.ReAnswer = async (session_id, handle_id, sdp) => {
+    //{"janus":"message","body":{"request":"call","username":"vv"},"transaction":"XIndw5DZk9HR","jsep":{"type":"offer","sdp":""}}
+    let json_object = {
+        "janus": "message",
+        "body": {
+            "request": "set"
+        },
+        "jsep": {
+            "type": "answer",
+            "sdp": sdp
+        },
+        "transaction": "XIndw5DZk9HR"
+    };
+
+    console.log("DO_RE_ANSWER_REQ", JSON.stringify(json_object));
+    console.log("DO_RE_ANSWER_URL", `http://` + host + `:8088/janus/` + session_id + "/" + handle_id);
+
+    return new Promise(function (resolve, reject) {
+        request({
+            url: `http://` + host + `:8088/janus/` + session_id + "/" + handle_id,
+            headers: {},
+            method: 'POST',
+            json: json_object
+        }, function (error, response, body) {
+            if (!error && response.statusCode === 200) {
+                console.log("DO_RE_ANSWER", JSON.stringify(body));
                 resolve(body);
             } else {
                 reject(error);
