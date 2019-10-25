@@ -11,7 +11,7 @@ const expressServer = require('./express');
 
 //---------------------- WEBSOCKET SERVER ------------------------------
 var WebSocketServer = require('websocket').server;
-var janusLib = require('./janus');
+var janusLib = require('./src/libs/janusLib');
 
 //----------------- HTTPS-------------------
 var http = require('https');
