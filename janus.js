@@ -47,21 +47,34 @@ module.exports.AttachPlugin = async (session_id, plugin_name) => {
     });
 };
 
-module.exports.RegisterUser = async (session_id, handle_id, username) => {
+module.exports.RegisterUser = async (session_id, handle_id, username, data) => {
     //{"janus":"message","body":{"request":"register","username":"qq"},"transaction":"Fi7nRgeSW7Jx"}
+
+    let inputJson = {
+        "janus": "message",
+        "body": {
+            "request": "register",
+            "username": username
+        },
+        "transaction": "123123"
+    };
+
+    if (data.plugin && data.plugin === "sip") {
+        //{"janus":"message","body":{"request":"register","username":"sip:1001@192.168.1.4","authuser":"1001","display_name":"1001","secret":"1234","proxy":"sip:192.168.1.4"},"transaction":"FMnCHT9Td6fB"}
+        inputJson.body.authuser = data.authuser;
+        inputJson.body.display_name = data.display_name;
+        inputJson.body.secret = data.secret;
+        inputJson.body.proxy = data.host;
+    }
+
+    console.log("REQ_REGISTER_USER", JSON.stringify(inputJson));
+
     return new Promise(function (resolve, reject) {
         request({
             url: `http://` + host + `:8088/janus/` + session_id + "/" + handle_id,
             headers: {},
             method: 'POST',
-            json: {
-                "janus": "message",
-                "body": {
-                    "request": "register",
-                    "username": username
-                },
-                "transaction": "123123"
-            }
+            json: inputJson
         }, function (error, response, body) {
             if (!error && response.statusCode === 200) {
                 console.log("REG_USER_RESP", username, JSON.stringify(body));
@@ -100,6 +113,7 @@ module.exports.GetUserList = async (session_id, handle_id) => {
 
 module.exports.CreateOffer = async (session_id, handle_id, recipient, caller_sdp) => {
     //{"janus":"message","body":{"request":"call","username":"vv"},"transaction":"XIndw5DZk9HR","jsep":{"type":"offer","sdp":""}}
+
     let json_object = {
         "janus": "message",
         "body": {
@@ -113,6 +127,11 @@ module.exports.CreateOffer = async (session_id, handle_id, recipient, caller_sdp
             "sdp": caller_sdp
         }
     };
+
+    if (recipient.includes("sip:")) {
+        delete json_object.body.username;
+        json_object.body.uri = recipient;
+    }
 
     console.log("DO_OFFER_REQ", JSON.stringify(json_object));
 

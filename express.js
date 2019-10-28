@@ -51,7 +51,9 @@ let ProcessEvent = async (event) => {
         outResp.callee_sdp = event.event.jsep.sdp;
 
         setTimeout(function () {
-            connection.sendUTF(JSON.stringify({key: "test value"}));
+            if (connection !== null && connection !== undefined) {
+                connection.sendUTF(JSON.stringify({key: "test value"}));
+            }
         }, 3000);
 
     } else if (event.event.name && event.event.name === "timeout") {
@@ -89,7 +91,7 @@ let ProcessEvent = async (event) => {
         outResp.type = "audio-stream-ok";
     }*/
 
-    if (connection != null) {
+    if (connection !== null && connection !== undefined) {
         console.log("WS SEND:", JSON.stringify(outResp));
         connection.sendUTF(JSON.stringify(outResp));
     }

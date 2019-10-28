@@ -101,7 +101,7 @@ let distribute = async (data) => {
     try {
         switch (data.type) {
             case 'init':
-                outResp = await Register(data.caller_username);
+                outResp = await Register(data.caller_username, data);
                 break;
             case 'offer':
                 outResp = await InitCall(data.caller_session_id, data.caller_handle_id, data.callee_username, data.sdp);
@@ -133,7 +133,7 @@ let distribute = async (data) => {
     return outResp;
 };
 
-let Register = async (username) => {
+let Register = async (username, data) => {
     let outResp = {
         status: true,
         message: "SUCCESS",
@@ -143,7 +143,13 @@ let Register = async (username) => {
     try {
         //create caller session and attach
         let session_resp = await janusLib.CreateSession();
-        let attach_resp = await janusLib.AttachPlugin(session_resp.data.id, "janus.plugin.videocall");
+
+        let pluginName = "janus.plugin.videocall";
+        if (data.plugin && data.plugin === "sip") {
+            pluginName = "janus.plugin.sip";
+        }
+
+        let attach_resp = await janusLib.AttachPlugin(session_resp.data.id, pluginName);
         outResp.caller_session_id = attach_resp.session_id;
         outResp.caller_handle_id = attach_resp.data.id;
 
@@ -167,7 +173,7 @@ let Register = async (username) => {
         };
 
         //register
-        let reg_resp = await janusLib.RegisterUser(outResp.caller_session_id, outResp.caller_handle_id, username);
+        let reg_resp = await janusLib.RegisterUser(outResp.caller_session_id, outResp.caller_handle_id, username, data);
     } catch (e) {
         console.log("ERROR_REGISTER", e);
         outResp.status = false;
@@ -317,3 +323,5 @@ let ReOffer = async (caller_session_id, caller_handle_id, callee_username, sdp) 
 
     return outResp;
 };
+
+///---------------------SIP STUFF-----------------------------------------------------
