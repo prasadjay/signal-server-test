@@ -437,3 +437,25 @@ module.exports.ReAnswer = async (session_id, handle_id, sdp) => {
         });
     });
 };
+
+module.exports.LongPoll = async (session_id) => {
+    console.log("SENDING_LONG_POLL", session_id);
+    return new Promise(function (resolve, reject) {
+        request({
+            url: `http://` + host + `:8088/janus/` + session_id,
+            headers: {},
+            method: 'GET',
+            json: {},
+            timeout: 300000
+        }, function (error, response, body) {
+            console.log("LONG_POLL_ENDED", JSON.stringify(response));
+
+            if (!error && response.statusCode === 200) {
+                console.log("LONG_POLL_RESPONSE", JSON.stringify(body));
+                resolve(body);
+            } else {
+                reject(error);
+            }
+        });
+    });
+};

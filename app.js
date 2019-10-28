@@ -172,8 +172,12 @@ let Register = async (username, data) => {
             handler_id: outResp.caller_handle_id
         };
 
+        janusLib.LongPoll(outResp.caller_session_id);
+
         //register
         let reg_resp = await janusLib.RegisterUser(outResp.caller_session_id, outResp.caller_handle_id, username, data);
+        console.log(reg_resp);
+
     } catch (e) {
         console.log("ERROR_REGISTER", e);
         outResp.status = false;
