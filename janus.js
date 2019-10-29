@@ -455,10 +455,10 @@ let LongPoll = async (session_id) => {
                 LongPoll(session_id);
                 resolve(body);
             } else {
-                if (response.statusCode === 404) {
+                if (response !== undefined && response !== null && response.statusCode === 404) {
                     console.log("SESSION_HAD_CLOSED_FORCEFULLY", session_id);
                 } else {
-                    console.log("LONG_POLL_ERROR", response.statusCode, error);
+                    console.log("LONG_POLL_ERROR", error);
                 }
                 reject(error);
             }
