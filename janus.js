@@ -438,11 +438,11 @@ module.exports.ReAnswer = async (session_id, handle_id, sdp) => {
     });
 };
 
-module.exports.LongPoll = async (session_id) => {
+let LongPoll = async (session_id) => {
     console.log("SENDING_LONG_POLL", session_id);
     return new Promise(function (resolve, reject) {
         request({
-            url: `http://` + host + `:8088/janus/` + session_id,
+            url: `http://` + host + `:8088/janus/` + session_id + "?maxev=5",
             headers: {},
             method: 'GET',
             json: {},
@@ -454,8 +454,15 @@ module.exports.LongPoll = async (session_id) => {
                 console.log("LONG_POLL_RESPONSE", JSON.stringify(body));
                 resolve(body);
             } else {
-                reject(error);
+                if (error.code === "ECONNRESET") {
+                    console.log("LONG_POLL_TIMED_OUT_RESEND_INIT", session_id);
+                    LongPoll(session_id);
+                } else {
+                    reject(error);
+                }
             }
         });
     });
 };
+
+module.exports.LongPoll = LongPoll;
