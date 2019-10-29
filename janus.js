@@ -1,5 +1,6 @@
 const request = require('request');
 const Promise = require("bluebird");
+//process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 1;
 
 const host = "localhost";
 
@@ -439,27 +440,27 @@ module.exports.ReAnswer = async (session_id, handle_id, sdp) => {
 };
 
 let LongPoll = async (session_id) => {
-    console.log("SENDING_LONG_POLL", session_id);
+    let rid = new Date().getTime();
+    let url = "http://" + host + ":8088/janus/" + session_id + "?rid=" + rid + "&maxev=5";
+    console.log("SENDING_LONG_POLL", session_id, url);
     return new Promise(function (resolve, reject) {
         request({
-            url: `http://` + host + `:8088/janus/` + session_id + "?maxev=5",
+            url: url,
             headers: {},
-            method: 'GET',
-            json: {},
-            timeout: 300000
+            method: 'GET'
         }, function (error, response, body) {
-            console.log("LONG_POLL_ENDED", JSON.stringify(response));
-
+            console.log("LONG_POLL_ENDED", body);
             if (!error && response.statusCode === 200) {
-                console.log("LONG_POLL_RESPONSE", JSON.stringify(body));
+                console.log("LONG_POLL_RESPONSE", body);
+                LongPoll(session_id);
                 resolve(body);
             } else {
-                if (error.code === "ECONNRESET") {
-                    console.log("LONG_POLL_TIMED_OUT_RESEND_INIT", session_id);
-                    LongPoll(session_id);
+                if (response.statusCode) {
+                    console.log("SESSION_CLOSED_FORCEFULLY", session_id);
                 } else {
-                    reject(error);
+                    console.log("LONG_POLL_ERROR", response.statusCode, error);
                 }
+                reject(error);
             }
         });
     });
